@@ -1,0 +1,76 @@
+﻿@using SimpleCurrencyApp.classes;
+@inject CurrencyLoader loader;
+
+@page "/"
+
+<h1>Convert currencies</h1>
+
+@if (converter is not null)
+{
+	<div class="container">
+		<div class="input padding-md">
+			<div class="width-md"><label for="amount">Amount:</label></div>
+			<input class="fnt padding-xs" type="number" name="amount" id="amount" @bind="amount"/>		
+		</div>
+			
+		<div class="input padding-md">
+			<div class="width-md"><label for="from">From:</label></div>
+			<select  class="fnt padding-xs" name="from" id="from" @bind="from">
+			@foreach (var currency in currencies)
+			{
+				<option class="fnt padding-xs" value=@currency.Code>@currency.Code - @currency.Name</option>
+			}
+		</select>
+		</div>
+
+		<div class="input padding-md">
+			<div class="width-md"><label for="to">To:</label></div>
+			<select  class="fnt padding-xs" name="to" id="to" @bind="to">
+			@foreach (var currency in currencies)
+			{
+				<option class="fnt padding-xs" value=@currency.Code>@currency.Code - @currency.Name</option>
+			} 
+			</select>
+		</div>		
+			<div class="padding-md"><button class="fnt padding-sm" type="submit" disabled="@inputInvalid()" @onclick="@OnConvert">Convert</button></div>
+
+		@if (convertedAmount != -1)
+		{
+			<div class="left-pd"><p class="no-margin">@amount @from = @convertedAmount @to</p></div>
+		}
+		
+	</div>
+}
+
+
+@code {
+
+	string baseApi = string.Empty;
+	string apiKey = string.Empty;
+
+	string from = string.Empty;
+	string to = string.Empty;
+	decimal amount = 1;
+	decimal convertedAmount = -1;
+	CurrencyConverter? converter;
+	List<Currency> currencies = new List<Currency>();
+
+	protected bool inputInvalid()
+	{
+		return from == string.Empty || to == string.Empty;
+	}
+
+	protected override async Task OnInitializedAsync()
+	{		
+		converter = await loader.LoadCurrencyDataAsync();
+		currencies = converter.GetCurrencyList();
+	}
+
+	protected void OnConvert(MouseEventArgs mouseEventArgs)
+	{
+		if (converter != null)
+		{
+			convertedAmount = Math.Round(converter.Convert(from, to, amount), 2);
+		}
+	}
+}
